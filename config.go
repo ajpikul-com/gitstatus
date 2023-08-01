@@ -6,8 +6,7 @@ import (
 	"sync"
 )
 
-// b, err := json.Marshal(instance of config)
-var repos map[string]bool
+var globalRepos map[string]bool
 var dataStore string
 var mutex sync.Mutex
 
@@ -21,14 +20,15 @@ func readDataStore() {
 	defer mutex.Unlock()
 	repoStore, err := os.Open(dataStore)
 	if err != nil {
-		panic(err.Error())
+		globalRepos = make(map[string]bool)
+		return
 	}
 	defer repoStore.Close()
 	reposDecoder := json.NewDecoder(repoStore)
 	if err != nil {
 		panic(err.Error())
 	}
-	err = reposDecoder.Decode(&repos)
+	err = reposDecoder.Decode(&globalRepos)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -37,7 +37,7 @@ func readDataStore() {
 func WriteDataStore() {
 	mutex.Lock()
 	defer mutex.Unlock()
-	repoStore, err := os.Open(dataStore)
+	repoStore, err := os.Create(dataStore)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -46,7 +46,8 @@ func WriteDataStore() {
 	if err != nil {
 		panic(err.Error())
 	}
-	err = reposEncoder.Encode(&repos)
+	reposEncoder.SetIndent(" ", "\t")
+	err = reposEncoder.Encode(&globalRepos)
 	if err != nil {
 		panic(err.Error())
 	}
