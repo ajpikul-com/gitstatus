@@ -127,26 +127,28 @@ func VerifyRepos() map[string]RepoState { // From here, it's probably time to se
 							panic(err.Error())
 							continue
 						}
-						checkedOutBranch := headRef.Branch()
-						upstreamRef, err := checkedOutBranch.Upstream()
-						if err != nil {
-							defaultLogger.Error(err.Error())
-							panic(err.Error())
-							continue
+						if headRef.IsBranch() {
+							checkedOutBranch := headRef.Branch()
+							upstreamRef, err := checkedOutBranch.Upstream()
+							if err != nil {
+								defaultLogger.Error(err.Error())
+								panic(err.Error())
+								continue
+							}
+							ahead, behind, err := g2gRepo.AheadBehind(headRef.Target(), upstreamRef.Target())
+							newState.Ahead = ahead
+							newState.Behind = behind
+							if ahead != 0 || behind != 0 {
+								newState.send = true
+							}
+							if err != nil {
+								defaultLogger.Error(err.Error())
+								panic(err.Error())
+								continue
+							}
+							defaultLogger.Debug(strconv.Itoa(ahead))
+							defaultLogger.Debug(strconv.Itoa(behind))
 						}
-						ahead, behind, err := g2gRepo.AheadBehind(headRef.Target(), upstreamRef.Target())
-						newState.Ahead = ahead
-						newState.Behind = behind
-						if ahead != 0 || behind != 0 {
-							newState.send = true
-						}
-						if err != nil {
-							defaultLogger.Error(err.Error())
-							panic(err.Error())
-							continue
-						}
-						defaultLogger.Debug(strconv.Itoa(ahead))
-						defaultLogger.Debug(strconv.Itoa(behind))
 					}
 				}
 			}
