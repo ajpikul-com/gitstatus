@@ -1,9 +1,11 @@
 package gitstatus
 
 import (
+	"os/exec"
+	"strconv"
+
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/object"
+	git2go "gopkg.in/libgit2/git2go.v24"
 )
 
 type repoState struct {
@@ -22,54 +24,72 @@ func VerifyRepos() {
 			}
 			defaultLogger.Debug("We found a good repo")
 			defaultLogger.Debug(k)
+			g2gRepo, err := git2go.OpenRepository(k)
+			if err != nil {
+				defaultLogger.Error(err.Error())
+				panic(err.Error())
+				continue
+			}
 			workTree, err := repo.Worktree()
 			if err != nil {
 				defaultLogger.Debug("No worktree!")
+				defaultLogger.Error(err.Error())
+				panic(err.Error())
 				continue
 			}
 			status, err := workTree.Status()
 			if err != nil {
 				defaultLogger.Error("Error getting status")
+				defaultLogger.Error(err.Error())
+				panic(err.Error())
 			}
 			if !status.IsClean() {
 				defaultLogger.Debug("Not Clean")
 				defaultLogger.Debug(status.String())
 			}
-			remotes, err := repo.Remotes()
+			remotes, err := g2gRepo.Remotes.List()
 			if err != nil {
-				defaultLogger.Error(err.Error()) // error with repo.Config, probalby file system issue
-				continue
+				defaultLogger.Error("Error getting remotes list")
+				defaultLogger.Error(err.Error())
+				panic(err.Error())
 			}
 			if len(remotes) == 0 {
 				defaultLogger.Debug("This repo has no remote!")
 			} else {
+				// There's remotes, lets update them
 				for _, remote := range remotes {
-					err = remote.Fetch(&git.FetchOptions{})
-					if err != nil && err == git.NoErrAlreadyUpToDate {
+					defaultLogger.Debug("Found a remote")
+					defaultLogger.Debug(remote)
+
+					cmd := exec.Command("git", "-C", k, "fetch", "--all")
+					_, err = cmd.Output()
+					if err != nil {
 						defaultLogger.Error(err.Error())
+						panic(err.Error())
 						continue
 					}
-					if remote.Config().Name == "origin" {
-						upstreamRef, err := repo.Reference(plumbing.NewRemoteHEADReferenceName("origin"), true)
+					if remote == "origin" {
+						headRef, err := g2gRepo.Head()
 						if err != nil {
+							defaultLogger.Error(err.Error())
 							panic(err.Error())
+							continue
 						}
-						options := &git.LogOptions{
-							From:  upstreamRef.Hash(),
-							Order: git.LogOrderCommitterTime,
-						}
-						iter, err := repo.Log(options)
+						checkedOutBranch := headRef.Branch()
+						upstreamRef, err := checkedOutBranch.Upstream()
 						if err != nil {
+							defaultLogger.Error(err.Error())
 							panic(err.Error())
+							continue
 						}
-						err = iter.ForEach(func(commit *object.Commit) error {
-							defaultLogger.Debug(commit.Hash.String()) // check to see if we are that house
-							defaultLogger.Debug(commit.Message)
-							return nil
-						})
+						ahead, behind, err := g2gRepo.AheadBehind(headRef.Target(), upstreamRef.Target())
 						if err != nil {
+							defaultLogger.Error(err.Error())
 							panic(err.Error())
+							continue
 						}
+						defaultLogger.Debug(strconv.Itoa(ahead))
+						defaultLogger.Debug(strconv.Itoa(behind))
 					}
 				}
 				// It has remotes and we've fetched them

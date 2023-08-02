@@ -3,8 +3,10 @@ module github.com/ajpikul-com/gitstatus
 go 1.20
 
 require (
-	github.com/ajpikul-com/ilog v0.0.0-20230731054233-41f4cea82648
+	github.com/ajpikul-com/ilog v0.0.0-20230801223712-a354a781fe44
 	github.com/go-git/go-git/v5 v5.8.1
+	github.com/libgit2/git2go/v27 v27.14.7
+	gopkg.in/libgit2/git2go.v24 v24.6.0
 )
 
 require (
@@ -29,7 +31,7 @@ require (
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.12.0 // indirect
+	golang.org/x/net v0.13.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/tools v0.11.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
