@@ -46,7 +46,7 @@ func WriteDataStore() {
 	if err != nil {
 		panic(err.Error())
 	}
-	reposEncoder.SetIndent(" ", "\t")
+	reposEncoder.SetIndent(" ", " ")
 	err = reposEncoder.Encode(&globalRepos)
 	if err != nil {
 		panic(err.Error())

@@ -8,7 +8,7 @@ import (
 	git2go "gopkg.in/libgit2/git2go.v24"
 )
 
-type repoState struct {
+type RepoState struct {
 	Name   string
 	Remote bool
 	Dirty  string
@@ -17,8 +17,8 @@ type repoState struct {
 	send   bool
 }
 
-func VerifyRepos() map[string]repoState { // From here, it's probably time to send them over to the server
-	repoStates := make(map[string]repoState)
+func VerifyRepos() map[string]RepoState { // From here, it's probably time to send them over to the server
+	repoStates := make(map[string]RepoState)
 	mutex.Lock()
 	defer WriteDataStore()
 	defer mutex.Unlock() // Last in first out!
@@ -34,7 +34,7 @@ func VerifyRepos() map[string]repoState { // From here, it's probably time to se
 			}
 			defaultLogger.Debug("We found a good repo")
 			defaultLogger.Debug(k)
-			newState := repoState{Name: k}
+			newState := RepoState{Name: k}
 			g2gRepo, err := git2go.OpenRepository(k)
 			if err != nil {
 				defaultLogger.Error(err.Error())
