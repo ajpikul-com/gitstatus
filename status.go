@@ -99,6 +99,7 @@ func VerifyRepos() map[string]RepoState { // From here, it's probably time to se
 				newState.Remote = false
 				newState.send = true
 			} else {
+				defaultLogger.Debug("Setting repo states Remote to true")
 				newState.Remote = true
 				// There's remotes, lets update them
 				for _, remote := range remotes {
