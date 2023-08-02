@@ -8,10 +8,20 @@ import (
 	git2go "gopkg.in/libgit2/git2go.v24"
 )
 
+var repoStates map[string]repoState
+
 type repoState struct {
+	Name   string
+	Remote bool
+	Dirty  string
+	Ahead  int
+	Behind int
+	send   bool
 }
 
-func VerifyRepos() {
+func VerifyRepos() { // From here, it's probably time to send them over to the server
+	repoStates = make(map[string]repoState)
+	defer WriteDataStore()
 	for k, v := range globalRepos {
 		if v {
 			repo, err := git.PlainOpen(k)
@@ -24,6 +34,7 @@ func VerifyRepos() {
 			}
 			defaultLogger.Debug("We found a good repo")
 			defaultLogger.Debug(k)
+			newState := repoState{Name: k}
 			g2gRepo, err := git2go.OpenRepository(k)
 			if err != nil {
 				defaultLogger.Error(err.Error())
@@ -46,6 +57,8 @@ func VerifyRepos() {
 			if !status.IsClean() {
 				defaultLogger.Debug("Not Clean")
 				defaultLogger.Debug(status.String())
+				newState.Dirty = status.String()
+				newState.send = true
 			}
 			remotes, err := g2gRepo.Remotes.List()
 			if err != nil {
@@ -55,6 +68,8 @@ func VerifyRepos() {
 			}
 			if len(remotes) == 0 {
 				defaultLogger.Debug("This repo has no remote!")
+				newState.Remote = false
+				newState.send = true
 			} else {
 				// There's remotes, lets update them
 				for _, remote := range remotes {
@@ -83,6 +98,11 @@ func VerifyRepos() {
 							continue
 						}
 						ahead, behind, err := g2gRepo.AheadBehind(headRef.Target(), upstreamRef.Target())
+						newState.Ahead = ahead
+						newState.Behind = behind
+						if ahead != 0 || behind != 0 {
+							newState.send = true
+						}
 						if err != nil {
 							defaultLogger.Error(err.Error())
 							panic(err.Error())
@@ -92,10 +112,9 @@ func VerifyRepos() {
 						defaultLogger.Debug(strconv.Itoa(behind))
 					}
 				}
-				// It has remotes and we've fetched them
-				// We now want to know if we're behind from upstream
-				// But go-git provides no easy way to do that
-				// We'd have to get a reference to the upstream head
+			}
+			if newState.send {
+				repoStates[newState.Name] = newState
 			}
 		}
 	}
