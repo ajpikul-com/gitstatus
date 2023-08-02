@@ -14,7 +14,7 @@ func FindRepos() []string {
 
 	repos := make([]string, 0)
 	isRepo := func(path string, d fs.DirEntry, err error) error {
-		if path == dir+"/go" {
+		if path == dir+"/go" || d.Name() == "node_modules" {
 			return filepath.SkipDir
 		}
 		if err != nil {
