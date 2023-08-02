@@ -1,12 +1,39 @@
 package gitstatus
 
 import (
+	"encoding/json"
 	"os/exec"
 	"strconv"
+	"sync"
 
 	"github.com/go-git/go-git/v5"
 	git2go "gopkg.in/libgit2/git2go.v24"
 )
+
+type StateMap struct {
+	states map[string]RepoState
+	mutex  sync.Mutex
+}
+
+func NewStateMap() *StateMap {
+	return &StateMap{states: make(map[string]RepoState)}
+}
+func (sm *StateMap) Len() int {
+	sm.mutex.Lock()
+	defer sm.mutex.Unlock()
+	return len(sm.states)
+}
+func (sm *StateMap) Update(name string, client string, state RepoState) {
+	sm.mutex.Lock()
+	defer sm.mutex.Unlock()
+	state.Client = client
+	sm.states[client+"+"+name] = state
+}
+func (sm *StateMap) MarshalJSON() ([]byte, error) {
+	sm.mutex.Lock()
+	defer sm.mutex.Unlock()
+	return json.Marshal(sm.states)
+}
 
 type RepoState struct {
 	Name   string
@@ -15,6 +42,7 @@ type RepoState struct {
 	Ahead  int
 	Behind int
 	send   bool
+	Client string
 }
 
 func VerifyRepos() map[string]RepoState { // From here, it's probably time to send them over to the server
