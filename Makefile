@@ -1,6 +1,6 @@
 .PHONY: all init local official
 all:
-	@echo "Error: make command needs target" && exit 1
+	gp build
 
 init:
 	cp go.mod go.mod.local
