@@ -11,23 +11,30 @@ import (
 )
 
 type StateMap struct {
-	states map[string]RepoState
+	states map[string]map[string]RepoState
 	mutex  sync.Mutex
 }
 
 func NewStateMap() *StateMap {
-	return &StateMap{states: make(map[string]RepoState)}
+	return &StateMap{states: make(map[string]map[string]RepoState)} // TODO
 }
-func (sm *StateMap) Len() int {
+
+func (sm *StateMap) ClearClient(client string) {
 	sm.mutex.Lock()
 	defer sm.mutex.Unlock()
-	return len(sm.states)
+	if _, ok := sm.states[client]; ok {
+		delete(sm.states, client)
+	}
 }
-func (sm *StateMap) Update(name string, client string, state RepoState) {
+
+func (sm *StateMap) Update(client string, repoName string, state RepoState) {
 	sm.mutex.Lock()
 	defer sm.mutex.Unlock()
+	if _, ok := sm.states[client]; !ok {
+		sm.states[client] = make(map[string]RepoState)
+	}
 	state.Client = client
-	sm.states[client+"+"+name] = state
+	sm.states[client][repoName] = state
 }
 func (sm *StateMap) MarshalJSON() ([]byte, error) {
 	sm.mutex.Lock()
