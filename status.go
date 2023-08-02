@@ -8,8 +8,6 @@ import (
 	git2go "gopkg.in/libgit2/git2go.v24"
 )
 
-var repoStates map[string]repoState
-
 type repoState struct {
 	Name   string
 	Remote bool
@@ -19,8 +17,8 @@ type repoState struct {
 	send   bool
 }
 
-func VerifyRepos() { // From here, it's probably time to send them over to the server
-	repoStates = make(map[string]repoState)
+func VerifyRepos() map[string]repoState { // From here, it's probably time to send them over to the server
+	repoStates := make(map[string]repoState)
 	mutex.Lock()
 	defer WriteDataStore()
 	defer mutex.Unlock() // Last in first out!
@@ -120,4 +118,5 @@ func VerifyRepos() { // From here, it's probably time to send them over to the s
 			}
 		}
 	}
+	return repoStates
 }
