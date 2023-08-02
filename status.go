@@ -21,7 +21,9 @@ type repoState struct {
 
 func VerifyRepos() { // From here, it's probably time to send them over to the server
 	repoStates = make(map[string]repoState)
+	mutex.Lock()
 	defer WriteDataStore()
+	defer mutex.Unlock() // Last in first out!
 	for k, v := range globalRepos {
 		if v {
 			repo, err := git.PlainOpen(k)

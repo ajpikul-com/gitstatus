@@ -46,11 +46,13 @@ func FindRepos() []string {
 
 // Automatically add all new repos
 func CompareRepos(repos []string) {
+	mutex.Lock()
 	for _, v := range repos {
 		if _, ok := globalRepos[v]; !ok {
 			globalRepos[v] = true
 		}
 	}
+	mutex.Unlock()
 }
 
 func DumpRepos() {
