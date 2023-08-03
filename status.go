@@ -132,7 +132,9 @@ func VerifyRepos() map[string]RepoState { // From here, it's probably time to se
 							upstreamRef, err := checkedOutBranch.Upstream()
 							if err != nil {
 								defaultLogger.Error(err.Error())
-								panic(err.Error())
+								// Likely not found
+								newState.Remote = false
+								newState.send = true // There are remotes, but no upstream!
 								continue
 							}
 							ahead, behind, err := g2gRepo.AheadBehind(headRef.Target(), upstreamRef.Target())
