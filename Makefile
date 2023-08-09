@@ -1,6 +1,6 @@
 .PHONY: all init local official
 all:
-	gp build
+	go build
 
 init:
 	cp go.mod go.mod.local
