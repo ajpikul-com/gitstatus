@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os/exec"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/go-git/go-git/v5"
@@ -88,6 +89,11 @@ func VerifyRepos() map[string]RepoState { // From here, it's probably time to se
 				defaultLogger.Error("Error getting status")
 				defaultLogger.Error(err.Error())
 				panic(err.Error())
+			}
+			for k, _ := range status {
+				if strings.Contains(k, "node_modules") {
+					delete(status, k)
+				}
 			}
 			if !status.IsClean() {
 				defaultLogger.Debug("Not Clean")
